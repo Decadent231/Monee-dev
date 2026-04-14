@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.money.cloud.monee.mapper.CategoryMapper">
+
+    <select id="selectByUserIdOrDefault" resultType="com.money.cloud.monee.entity.Category">
+        SELECT id, user_id, type, icon, name, description, sort, created_at, updated_at
+        FROM categories
+        WHERE user_id = #{userId} OR user_id IS NULL
+        ORDER BY sort ASC
+    </select>
+
+    <select id="selectByTypeAndUserIdOrDefault" resultType="com.money.cloud.monee.entity.Category">
+        SELECT id, user_id, type, icon, name, description, sort, created_at, updated_at
+        FROM categories
+        WHERE type = #{type}
+          AND (user_id = #{userId} OR user_id IS NULL)
+        ORDER BY sort ASC
+    </select>
+
+</mapper>

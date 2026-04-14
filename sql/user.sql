@@ -1,0 +1,19 @@
+CREATE DATABASE IF NOT EXISTS money_cloud_user DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE money_cloud_user;
+
+CREATE TABLE IF NOT EXISTS sys_user (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '用户ID',
+    email VARCHAR(128) NOT NULL UNIQUE COMMENT '邮箱',
+    password VARCHAR(255) NOT NULL COMMENT '加密密码',
+    nickname VARCHAR(32) NOT NULL COMMENT '昵称',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='系统用户表';
+
+CREATE TABLE IF NOT EXISTS sys_verify_code (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    email VARCHAR(128) NOT NULL COMMENT '邮箱',
+    code VARCHAR(6) NOT NULL COMMENT '验证码',
+    expire_time DATETIME NOT NULL COMMENT '过期时间',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_email_created_at (email, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='邮箱验证码表';

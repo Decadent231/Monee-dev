@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: money-cloud-user
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:101.201.235.13}:${MYSQL_PORT:3306}/money_cloud_user?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:change-me}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  mail:
+    host: ${MAIL_HOST:smtp.qq.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-email@example.com}
+    password: ${MAIL_PASSWORD:change-me}
+    protocol: ${MAIL_PROTOCOL:smtp}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+          ssl:
+            trust: ${MAIL_SMTP_SSL_TRUST:smtp.qq.com}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:bW9uZXktY2xvdWQtdW5pZmllZC1zZWNyZXQtbW9uZXktY2xvdWQtdW5pZmllZC1zZWNyZXQ=}
+    expire-seconds: ${JWT_EXPIRE_SECONDS:63072000}
+
+logging:
+  level:
+    com.money.cloud: info

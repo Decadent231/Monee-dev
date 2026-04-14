@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.money.cloud.monee.mapper.RecordMapper">
+
+    <select id="selectByFilters" resultType="com.money.cloud.monee.entity.Record">
+        SELECT id, user_id, date, type, category_id, amount, remark, created_at, updated_at
+        FROM records
+        WHERE user_id = #{userId}
+        <if test="startDate != null">
+            AND date &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND date &lt;= #{endDate}
+        </if>
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="categoryId != null">
+            AND category_id = #{categoryId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND remark LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY date DESC, id DESC
+    </select>
+
+    <select id="sumByUserIdAndTypeAndYearMonth" resultType="java.math.BigDecimal">
+        SELECT SUM(amount)
+        FROM records
+        WHERE user_id = #{userId}
+          AND type = #{type}
+          AND YEAR(date) = #{year}
+          AND MONTH(date) = #{month}
+    </select>
+
+    <select id="selectByUserIdAndYearMonth" resultType="com.money.cloud.monee.entity.Record">
+        SELECT id, user_id, date, type, category_id, amount, remark, created_at, updated_at
+        FROM records
+        WHERE user_id = #{userId}
+          AND YEAR(date) = #{year}
+          AND MONTH(date) = #{month}
+        ORDER BY date DESC, id DESC
+    </select>
+
+    <select id="selectByUserIdAndYear" resultType="com.money.cloud.monee.entity.Record">
+        SELECT id, user_id, date, type, category_id, amount, remark, created_at, updated_at
+        FROM records
+        WHERE user_id = #{userId}
+          AND YEAR(date) = #{year}
+        ORDER BY date DESC, id DESC
+    </select>
+
+    <select id="selectByUserIdOrderByDateDesc" resultType="com.money.cloud.monee.entity.Record">
+        SELECT id, user_id, date, type, category_id, amount, remark, created_at, updated_at
+        FROM records
+        WHERE user_id = #{userId}
+        ORDER BY date DESC, id DESC
+    </select>
+
+</mapper>

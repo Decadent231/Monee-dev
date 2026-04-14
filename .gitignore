@@ -1,0 +1,7 @@
+.idea/
+.m2/
+target/
+**/target/
+build.log
+*.log
+.DS_Store
