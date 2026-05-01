@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.money.cloud.common.api.ApiResponse;
 import com.money.cloud.note.entity.FileAsset;
 import com.money.cloud.note.entity.Note;
+import com.money.cloud.note.entity.WikiPage;
 import com.money.cloud.note.service.FileAssetService;
 import com.money.cloud.note.service.NoteService;
+import com.money.cloud.note.service.WikiService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StreamUtils;
@@ -27,6 +29,7 @@ public class FileAssetController {
 
     private final FileAssetService fileAssetService;
     private final NoteService noteService;
+    private final WikiService wikiService;
 
     @PostMapping("/upload")
     public ApiResponse<FileAsset> upload(@RequestParam("file") MultipartFile file,
@@ -121,6 +124,11 @@ public class FileAssetController {
     @GetMapping("/{id}/notes")
     public ApiResponse<List<Note>> listLinkedNotes(@PathVariable Long id) {
         return ApiResponse.success(noteService.listByFileId(id));
+    }
+
+    @GetMapping("/{id}/wiki-pages")
+    public ApiResponse<List<WikiPage>> listLinkedWikiPages(@PathVariable Long id) {
+        return ApiResponse.success(wikiService.listByFileId(id));
     }
 
     private boolean isPreviewable(String mime) {

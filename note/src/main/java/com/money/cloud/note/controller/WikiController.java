@@ -1,6 +1,7 @@
 package com.money.cloud.note.controller;
 
 import com.money.cloud.common.api.ApiResponse;
+import com.money.cloud.note.entity.FileAsset;
 import com.money.cloud.note.entity.WikiPage;
 import com.money.cloud.note.entity.WikiSpace;
 import com.money.cloud.note.service.WikiService;
@@ -77,5 +78,24 @@ public class WikiController {
     @GetMapping("/spaces/{spaceId}/tree")
     public ApiResponse<List<Map<String, Object>>> getPageTree(@PathVariable Long spaceId) {
         return ApiResponse.success(wikiService.getPageTree(spaceId));
+    }
+
+    // ---- Page-File Association ----
+
+    @PostMapping("/pages/{id}/files")
+    public ApiResponse<Void> linkFiles(@PathVariable Long id, @RequestBody List<Long> fileIds) {
+        wikiService.linkFiles(id, fileIds);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/pages/{id}/files/{fileId}")
+    public ApiResponse<Void> unlinkFile(@PathVariable Long id, @PathVariable Long fileId) {
+        wikiService.unlinkFile(id, fileId);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/pages/{id}/files")
+    public ApiResponse<List<FileAsset>> listLinkedFiles(@PathVariable Long id) {
+        return ApiResponse.success(wikiService.listLinkedFiles(id));
     }
 }

@@ -3,8 +3,12 @@ package com.money.cloud.note.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.money.cloud.common.context.UserContext;
 import com.money.cloud.common.exception.BusinessException;
+import com.money.cloud.note.entity.FileAsset;
 import com.money.cloud.note.entity.WikiPage;
+import com.money.cloud.note.entity.WikiPageFile;
 import com.money.cloud.note.entity.WikiSpace;
+import com.money.cloud.note.mapper.FileAssetMapper;
+import com.money.cloud.note.mapper.WikiPageFileMapper;
 import com.money.cloud.note.mapper.WikiPageMapper;
 import com.money.cloud.note.mapper.WikiSpaceMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,8 @@ public class WikiService {
 
     private final WikiSpaceMapper wikiSpaceMapper;
     private final WikiPageMapper wikiPageMapper;
+    private final WikiPageFileMapper wikiPageFileMapper;
+    private final FileAssetMapper fileAssetMapper;
     private final ActivityLogService activityLogService;
 
     // ---- Space ----
@@ -186,5 +192,52 @@ public class WikiService {
             throw new BusinessException(404, "页面不存在");
         }
         return page;
+    }
+
+    // ---- Page-File Association ----
+
+    @Transactional
+    public void linkFiles(Long pageId, List<Long> fileIds) {
+        getOwnedPage(pageId);
+        for (Long fileId : fileIds) {
+            boolean exists = wikiPageFileMapper.selectCount(new LambdaQueryWrapper<WikiPageFile>()
+                    .eq(WikiPageFile::getPageId, pageId)
+                    .eq(WikiPageFile::getFileId, fileId)) > 0;
+            if (!exists) {
+                WikiPageFile link = new WikiPageFile();
+                link.setPageId(pageId);
+                link.setFileId(fileId);
+                link.setCreatedAt(LocalDateTime.now());
+                wikiPageFileMapper.insert(link);
+            }
+        }
+    }
+
+    @Transactional
+    public void unlinkFile(Long pageId, Long fileId) {
+        getOwnedPage(pageId);
+        wikiPageFileMapper.delete(new LambdaQueryWrapper<WikiPageFile>()
+                .eq(WikiPageFile::getPageId, pageId)
+                .eq(WikiPageFile::getFileId, fileId));
+    }
+
+    public List<FileAsset> listLinkedFiles(Long pageId) {
+        getOwnedPage(pageId);
+        List<WikiPageFile> links = wikiPageFileMapper.selectList(new LambdaQueryWrapper<WikiPageFile>()
+                .eq(WikiPageFile::getPageId, pageId));
+        if (links.isEmpty()) return java.util.Collections.emptyList();
+        List<Long> fileIds = links.stream().map(WikiPageFile::getFileId).toList();
+        return fileAssetMapper.selectBatchIds(fileIds);
+    }
+
+    public List<WikiPage> listByFileId(Long fileId) {
+        Long userId = UserContext.requireUserId();
+        List<WikiPageFile> links = wikiPageFileMapper.selectList(new LambdaQueryWrapper<WikiPageFile>()
+                .eq(WikiPageFile::getFileId, fileId));
+        if (links.isEmpty()) return java.util.Collections.emptyList();
+        List<Long> pageIds = links.stream().map(WikiPageFile::getPageId).toList();
+        return wikiPageMapper.selectList(new LambdaQueryWrapper<WikiPage>()
+                .in(WikiPage::getId, pageIds)
+                .eq(WikiPage::getUserId, userId));
     }
 }
