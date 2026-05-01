@@ -9,6 +9,10 @@ spring:
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:yjf2314801143!}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: ${FILE_MAX_SIZE:50MB}
+      max-request-size: ${FILE_MAX_SIZE:50MB}
   mail:
     host: ${MAIL_HOST:smtp.qq.com}
     port: ${MAIL_PORT:587}
@@ -38,3 +42,8 @@ security:
 logging:
   level:
     com.money.cloud: info
+
+app:
+  file:
+    storage-path: ${FILE_STORAGE_PATH:/data/note-files}
+    max-size-mb: ${FILE_MAX_SIZE_MB:50}
