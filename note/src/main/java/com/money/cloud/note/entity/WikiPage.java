@@ -27,6 +27,9 @@ public class WikiPage {
 
     private String content;
 
+    @TableField("content_type")
+    private String contentType;
+
     @TableField("sort_order")
     private Integer sortOrder;
 

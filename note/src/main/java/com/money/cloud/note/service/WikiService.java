@@ -81,6 +81,7 @@ public class WikiService {
         page.setUserId(UserContext.requireUserId());
         WikiSpace space = getOwnedSpace(page.getSpaceId());
         if (page.getSortOrder() == null) page.setSortOrder(0);
+        if (!StringUtils.hasText(page.getContentType())) page.setContentType("markdown");
         page.setCreatedAt(LocalDateTime.now());
         page.setUpdatedAt(LocalDateTime.now());
         wikiPageMapper.insert(page);
@@ -93,6 +94,7 @@ public class WikiService {
         WikiPage existing = getOwnedPage(id);
         if (StringUtils.hasText(page.getTitle())) existing.setTitle(page.getTitle());
         if (page.getContent() != null) existing.setContent(page.getContent());
+        if (StringUtils.hasText(page.getContentType())) existing.setContentType(page.getContentType());
         if (page.getParentId() != null) existing.setParentId(page.getParentId());
         if (page.getSortOrder() != null) existing.setSortOrder(page.getSortOrder());
         existing.setUpdatedAt(LocalDateTime.now());

@@ -55,8 +55,9 @@ public class NoteController {
                                                  @RequestParam(defaultValue = "10") Integer size,
                                                  @RequestParam(required = false) String keyword,
                                                  @RequestParam(required = false) String category,
-                                                 @RequestParam(required = false) String tag) {
-        IPage<Note> pageData = noteService.page(current, size, keyword, category, tag);
+                                                 @RequestParam(required = false) String tag,
+                                                 @RequestParam(required = false) Boolean starred) {
+        IPage<Note> pageData = noteService.page(current, size, keyword, category, tag, starred);
         Map<String, Object> result = new HashMap<>();
         result.put("records", pageData.getRecords());
         result.put("total", pageData.getTotal());

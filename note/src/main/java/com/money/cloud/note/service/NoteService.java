@@ -100,7 +100,7 @@ public class NoteService {
         return getOwnedNote(id);
     }
 
-    public IPage<Note> page(int current, int size, String keyword, String category, String tag) {
+    public IPage<Note> page(int current, int size, String keyword, String category, String tag, Boolean starred) {
         LambdaQueryWrapper<Note> wrapper = new LambdaQueryWrapper<Note>()
                 .eq(Note::getUserId, UserContext.requireUserId())
                 .eq(Note::getDeleted, 0)
@@ -115,6 +115,9 @@ public class NoteService {
         }
         if (StringUtils.hasText(tag)) {
             wrapper.like(Note::getTags, tag);
+        }
+        if (Boolean.TRUE.equals(starred)) {
+            wrapper.eq(Note::getStarred, 1);
         }
         return noteMapper.selectPage(new Page<>(current, size), wrapper);
     }
