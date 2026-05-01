@@ -943,3 +943,43 @@ Authorization: Bearer <token>
 - 路径：`/note/files/{fileId}/notes`
 - 是否鉴权：`是`
 - 返回说明：返回 `Note[]`
+
+---
+
+## 15. 知识库页面-文件关联模块
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| 关联文件到页面 | POST | `/note/wiki/pages/{pageId}/files` | Body: 文件ID数组 `[1,2,3]` |
+| 取消关联 | DELETE | `/note/wiki/pages/{pageId}/files/{fileId}` | — |
+| 查询页面关联的文件 | GET | `/note/wiki/pages/{pageId}/files` | 返回 `FileAsset[]` |
+| 查询文件关联的知识库页面 | GET | `/note/files/{fileId}/wiki-pages` | 返回 `WikiPage[]` |
+
+### 15.1 关联文件到知识库页面
+
+- 方法：`POST`
+- 路径：`/note/wiki/pages/{pageId}/files`
+- 是否鉴权：`是`
+- Body：`[1, 2, 3]`（文件ID数组）
+- 返回说明：成功返回空data
+
+### 15.2 取消文件关联
+
+- 方法：`DELETE`
+- 路径：`/note/wiki/pages/{pageId}/files/{fileId}`
+- 是否鉴权：`是`
+- 返回说明：成功返回空data
+
+### 15.3 查询页面关联的文件列表
+
+- 方法：`GET`
+- 路径：`/note/wiki/pages/{pageId}/files`
+- 是否鉴权：`是`
+- 返回说明：返回 `FileAsset[]`
+
+### 15.4 查询文件关联的知识库页面列表
+
+- 方法：`GET`
+- 路径：`/note/files/{fileId}/wiki-pages`
+- 是否鉴权：`是`
+- 返回说明：返回 `WikiPage[]`（仅返回当前用户拥有的页面）
