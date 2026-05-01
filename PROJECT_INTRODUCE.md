@@ -147,6 +147,8 @@ flowchart LR
 - `sql/note_upgrade_20260501_v2.sql`（笔记内容类型、置顶、收藏、笔记模板表）
 - `sql/note_upgrade_20260501_v3.sql`（日历日程表、知识库空间表、知识库页面表）
 - `sql/note_upgrade_20260501_v4.sql`（文件库表）
+- `sql/note_upgrade_20260501_v5.sql`（笔记-文件关联表）
+- `sql/note_upgrade_20260501_v6.sql`（知识库页面-文件关联表）
 
 ## 7. 启动顺序
 

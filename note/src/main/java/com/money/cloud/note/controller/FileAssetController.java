@@ -42,8 +42,9 @@ public class FileAssetController {
     public ApiResponse<Map<String, Object>> page(@RequestParam(defaultValue = "1") Integer current,
                                                   @RequestParam(defaultValue = "20") Integer size,
                                                   @RequestParam(required = false) String keyword,
-                                                  @RequestParam(required = false) String folder) {
-        IPage<FileAsset> pageData = fileAssetService.page(current, size, keyword, folder);
+                                                  @RequestParam(required = false) String folder,
+                                                  @RequestParam(required = false) String linkedTitle) {
+        IPage<FileAsset> pageData = fileAssetService.page(current, size, keyword, folder, linkedTitle);
         Map<String, Object> result = new HashMap<>();
         result.put("records", pageData.getRecords());
         result.put("total", pageData.getTotal());

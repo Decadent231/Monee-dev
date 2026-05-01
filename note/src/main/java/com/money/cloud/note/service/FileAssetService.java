@@ -6,7 +6,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.money.cloud.common.context.UserContext;
 import com.money.cloud.common.exception.BusinessException;
 import com.money.cloud.note.entity.FileAsset;
+import com.money.cloud.note.entity.NoteFile;
+import com.money.cloud.note.entity.WikiPageFile;
 import com.money.cloud.note.mapper.FileAssetMapper;
+import com.money.cloud.note.mapper.NoteFileMapper;
+import com.money.cloud.note.mapper.WikiPageFileMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,6 +31,8 @@ import java.util.*;
 public class FileAssetService {
 
     private final FileAssetMapper fileAssetMapper;
+    private final NoteFileMapper noteFileMapper;
+    private final WikiPageFileMapper wikiPageFileMapper;
     private final ActivityLogService activityLogService;
 
     @Value("${app.file.storage-path:/data/note-files}")
@@ -93,8 +99,35 @@ public class FileAssetService {
     }
 
     public IPage<FileAsset> page(int current, int size, String keyword, String folder) {
+        return page(current, size, keyword, folder, null);
+    }
+
+    public IPage<FileAsset> page(int current, int size, String keyword, String folder, String linkedTitle) {
+        Long userId = UserContext.requireUserId();
+        Set<Long> filterFileIds = null;
+
+        if (StringUtils.hasText(linkedTitle)) {
+            filterFileIds = new HashSet<>();
+            List<NoteFile> noteFileLinks = noteFileMapper.selectList(new LambdaQueryWrapper<NoteFile>()
+                    .inSql(NoteFile::getNoteId,
+                            "SELECT id FROM note WHERE user_id = " + userId + " AND title LIKE '%" + linkedTitle.replace("'", "") + "%' AND deleted = 0"));
+            for (NoteFile nf : noteFileLinks) filterFileIds.add(nf.getFileId());
+
+            List<WikiPageFile> wikiFileLinks = wikiPageFileMapper.selectList(new LambdaQueryWrapper<WikiPageFile>()
+                    .inSql(WikiPageFile::getPageId,
+                            "SELECT id FROM wiki_page WHERE user_id = " + userId + " AND title LIKE '%" + linkedTitle.replace("'", "") + "%'"));
+            for (WikiPageFile wf : wikiFileLinks) filterFileIds.add(wf.getFileId());
+
+            if (filterFileIds.isEmpty()) {
+                Page<FileAsset> empty = new Page<>(current, size);
+                empty.setRecords(Collections.emptyList());
+                empty.setTotal(0);
+                return empty;
+            }
+        }
+
         LambdaQueryWrapper<FileAsset> wrapper = new LambdaQueryWrapper<FileAsset>()
-                .eq(FileAsset::getUserId, UserContext.requireUserId())
+                .eq(FileAsset::getUserId, userId)
                 .orderByDesc(FileAsset::getCreatedAt);
         if (StringUtils.hasText(keyword)) {
             wrapper.and(q -> q.like(FileAsset::getOriginalName, keyword)
@@ -102,6 +135,9 @@ public class FileAssetService {
         }
         if (StringUtils.hasText(folder)) {
             wrapper.eq(FileAsset::getFolder, folder);
+        }
+        if (filterFileIds != null) {
+            wrapper.in(FileAsset::getId, filterFileIds);
         }
         return fileAssetMapper.selectPage(new Page<>(current, size), wrapper);
     }
