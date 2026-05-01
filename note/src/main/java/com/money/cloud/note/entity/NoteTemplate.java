@@ -9,39 +9,27 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("note")
-public class Note {
+@TableName("note_template")
+public class NoteTemplate {
     @TableId(type = IdType.AUTO)
     private Long id;
 
     @TableField("user_id")
     private Long userId;
 
-    private String title;
-
-    private String category;
-
-    private String tags;
-
-    private String summary;
-
-    private String content;
+    private String name;
 
     @TableField("content_type")
     private String contentType;
+
+    private String content;
+
+    @TableField("is_system")
+    private Integer isSystem;
 
     @TableField("created_at")
     private LocalDateTime createdAt;
 
     @TableField("updated_at")
     private LocalDateTime updatedAt;
-
-    private Integer deleted;
-
-    @TableField("deleted_at")
-    private LocalDateTime deletedAt;
-
-    private Integer pinned;
-
-    private Integer starred;
 }

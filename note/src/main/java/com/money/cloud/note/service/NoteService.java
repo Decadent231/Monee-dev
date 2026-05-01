@@ -8,34 +8,82 @@ import com.money.cloud.common.exception.BusinessException;
 import com.money.cloud.note.dto.NoteCreateRequest;
 import com.money.cloud.note.dto.NoteUpdateRequest;
 import com.money.cloud.note.entity.Note;
+import com.money.cloud.note.entity.NoteTemplate;
 import com.money.cloud.note.mapper.NoteMapper;
+import com.money.cloud.note.mapper.NoteTemplateMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class NoteService {
 
     private final NoteMapper noteMapper;
+    private final NoteTemplateMapper noteTemplateMapper;
+    private final ActivityLogService activityLogService;
 
     @Transactional
     public Note create(NoteCreateRequest request) {
         Note note = new Note();
         note.setUserId(UserContext.requireUserId());
+        if (request.getTemplateId() != null) {
+            NoteTemplate tpl = noteTemplateMapper.selectById(request.getTemplateId());
+            if (tpl != null && (tpl.getIsSystem() == 1 || tpl.getUserId().equals(UserContext.requireUserId()))) {
+                note.setContent(tpl.getContent());
+                note.setContentType(tpl.getContentType());
+            }
+        }
         applyRequest(note, request);
         note.setCreatedAt(LocalDateTime.now());
         note.setUpdatedAt(LocalDateTime.now());
+        note.setDeleted(0);
+        note.setPinned(0);
+        note.setStarred(0);
         noteMapper.insert(note);
+        activityLogService.log("note", "create", note.getId(), note.getTitle());
         return note;
     }
 
     @Transactional
-    public void delete(Long id) {
-        noteMapper.deleteById(getOwnedNote(id).getId());
+    public void softDelete(Long id) {
+        Note note = getOwnedNote(id);
+        note.setDeleted(1);
+        note.setDeletedAt(LocalDateTime.now());
+        noteMapper.updateById(note);
+        activityLogService.log("note", "delete", id, note.getTitle());
+    }
+
+    @Transactional
+    public void restore(Long id) {
+        Note note = getOwnedTrashedNote(id);
+        note.setDeleted(0);
+        note.setDeletedAt(null);
+        noteMapper.updateById(note);
+        activityLogService.log("note", "restore", id, note.getTitle());
+    }
+
+    @Transactional
+    public void permanentlyDelete(Long id) {
+        Note note = getOwnedTrashedNote(id);
+        activityLogService.log("note", "delete", id, note.getTitle());
+        noteMapper.deleteById(note.getId());
+    }
+
+    @Transactional
+    public void emptyTrash() {
+        Long userId = UserContext.requireUserId();
+        List<Note> trashed = listTrash();
+        noteMapper.delete(new LambdaQueryWrapper<Note>()
+                .eq(Note::getUserId, userId)
+                .eq(Note::getDeleted, 1));
+        if (!trashed.isEmpty()) {
+            activityLogService.log("note", "delete", null, "清空回收站，共" + trashed.size() + "条");
+        }
     }
 
     @Transactional
@@ -44,6 +92,7 @@ public class NoteService {
         applyRequest(note, request);
         note.setUpdatedAt(LocalDateTime.now());
         noteMapper.updateById(note);
+        activityLogService.log("note", "update", id, note.getTitle());
         return note;
     }
 
@@ -54,7 +103,8 @@ public class NoteService {
     public IPage<Note> page(int current, int size, String keyword, String category, String tag) {
         LambdaQueryWrapper<Note> wrapper = new LambdaQueryWrapper<Note>()
                 .eq(Note::getUserId, UserContext.requireUserId())
-                .orderByDesc(Note::getUpdatedAt, Note::getId);
+                .eq(Note::getDeleted, 0)
+                .orderByDesc(Note::getPinned, Note::getUpdatedAt, Note::getId);
         if (StringUtils.hasText(keyword)) {
             wrapper.and(q -> q.like(Note::getTitle, keyword)
                     .or().like(Note::getSummary, keyword)
@@ -69,12 +119,48 @@ public class NoteService {
         return noteMapper.selectPage(new Page<>(current, size), wrapper);
     }
 
+    @Transactional
+    public Note togglePin(Long id) {
+        Note note = getOwnedNote(id);
+        note.setPinned(note.getPinned() != null && note.getPinned() == 1 ? 0 : 1);
+        noteMapper.updateById(note);
+        return note;
+    }
+
+    @Transactional
+    public Note toggleStar(Long id) {
+        Note note = getOwnedNote(id);
+        note.setStarred(note.getStarred() != null && note.getStarred() == 1 ? 0 : 1);
+        noteMapper.updateById(note);
+        return note;
+    }
+
+    public List<Note> listStarred() {
+        return noteMapper.selectList(new LambdaQueryWrapper<Note>()
+                .eq(Note::getUserId, UserContext.requireUserId())
+                .eq(Note::getDeleted, 0)
+                .eq(Note::getStarred, 1)
+                .orderByDesc(Note::getUpdatedAt));
+    }
+
+    public List<Note> listTrash() {
+        return noteMapper.selectList(new LambdaQueryWrapper<Note>()
+                .eq(Note::getUserId, UserContext.requireUserId())
+                .eq(Note::getDeleted, 1)
+                .orderByDesc(Note::getDeletedAt));
+    }
+
     private void applyRequest(Note note, NoteCreateRequest request) {
         note.setTitle(request.getTitle());
         note.setCategory(trimToNull(request.getCategory()));
         note.setTags(trimToNull(request.getTags()));
         note.setSummary(trimToNull(request.getSummary()));
         note.setContent(request.getContent());
+        if (StringUtils.hasText(request.getContentType())) {
+            note.setContentType(request.getContentType());
+        } else if (!StringUtils.hasText(note.getContentType())) {
+            note.setContentType("html");
+        }
     }
 
     private void applyRequest(Note note, NoteUpdateRequest request) {
@@ -83,6 +169,9 @@ public class NoteService {
         note.setTags(trimToNull(request.getTags()));
         note.setSummary(trimToNull(request.getSummary()));
         note.setContent(request.getContent());
+        if (StringUtils.hasText(request.getContentType())) {
+            note.setContentType(request.getContentType());
+        }
     }
 
     private String trimToNull(String value) {
@@ -93,9 +182,22 @@ public class NoteService {
         Note note = noteMapper.selectOne(new LambdaQueryWrapper<Note>()
                 .eq(Note::getId, id)
                 .eq(Note::getUserId, UserContext.requireUserId())
+                .eq(Note::getDeleted, 0)
                 .last("limit 1"));
         if (note == null) {
             throw new BusinessException(404, "笔记不存在");
+        }
+        return note;
+    }
+
+    private Note getOwnedTrashedNote(Long id) {
+        Note note = noteMapper.selectOne(new LambdaQueryWrapper<Note>()
+                .eq(Note::getId, id)
+                .eq(Note::getUserId, UserContext.requireUserId())
+                .eq(Note::getDeleted, 1)
+                .last("limit 1"));
+        if (note == null) {
+            throw new BusinessException(404, "回收站中不存在该笔记");
         }
         return note;
     }

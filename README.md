@@ -62,6 +62,7 @@ money-cloud
 - JWT 登录态，默认有效期 2 年
 - 获取当前用户信息
 - 修改昵称与密码
+- 密码验证（保险箱二次鉴权）
 
 ### 记账模块
 
@@ -73,11 +74,16 @@ money-cloud
 
 ### 笔记模块
 
-- 工作笔记 CRUD
+- 工作笔记 CRUD，支持软删除、回收站、恢复、彻底删除
 - 笔记分类、标签、摘要、富文本内容
-- 密码保险箱，后端加密存储
-- 待办事项 CRUD
+- 笔记内容类型：富文本(HTML) / Markdown 双模式
+- 笔记置顶、收藏
+- 笔记模板：系统预置模板 + 用户自定义模板
+- 全局搜索：跨笔记/保险箱/待办的全文检索
+- 密码保险箱，后端 AES 加密存储
+- 待办事项 CRUD，支持状态切换、优先级、截止日期
 - 待办邮件提醒：支持提醒时间、提醒邮箱，默认发到当前账号邮箱
+- 用户操作活动日志：记录笔记/保险箱/待办的创建、更新、删除操作
 
 ## 环境要求
 
@@ -103,6 +109,8 @@ money-cloud
 
 - [sql/note_migration_20260412.sql](./sql/note_migration_20260412.sql)
 - [sql/todo-reminder-upgrade.sql](./sql/todo-reminder-upgrade.sql)
+- [sql/note_upgrade_20260501.sql](./sql/note_upgrade_20260501.sql)（笔记软删除 + 活动日志表）
+- [sql/note_upgrade_20260501_v2.sql](./sql/note_upgrade_20260501_v2.sql)（笔记内容类型、置顶、收藏、笔记模板表）
 
 ## 配置说明
 

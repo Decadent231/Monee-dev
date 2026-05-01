@@ -100,6 +100,48 @@ Authorization: Bearer <token>
 - 是否鉴权：`是`
 - 返回说明：返回当前 JWT 对应用户信息
 
+### 2.5 修改用户资料
+
+- 请求方式：`PUT`
+- 路径：`/user/users/profile`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "nickname": "新的昵称"
+}
+```
+
+### 2.6 修改密码
+
+- 请求方式：`PUT`
+- 路径：`/user/users/password`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "oldPassword": "123456",
+  "newPassword": "654321"
+}
+```
+
+### 2.7 验证密码
+
+- 请求方式：`POST`
+- 路径：`/user/users/verify-password`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "password": "123456"
+}
+```
+
+- 返回说明：返回 `true` 或 `false`，用于保险箱二次验证等场景
+
 ## 3. monee 模块
 
 ### 3.1 查询月预算
@@ -276,16 +318,27 @@ Authorization: Bearer <token>
 
 ```json
 {
-  "title": "今天的总结",
-  "content": "完成了记账和微服务改造"
+  "title": "周报总结",
+  "category": "项目管理",
+  "tags": "周报,复盘",
+  "summary": "本周迭代总结",
+  "content": "<p>富文本内容</p>",
+  "contentType": "html",
+  "templateId": null
 }
 ```
 
-### 4.2 删除笔记
+字段说明：
+
+- `contentType`：内容类型，`html`（富文本，默认）/ `markdown`
+- `templateId`：可选，选择模板时传入，新建笔记将自动填充模板内容
+
+### 4.2 删除笔记（软删除，移入回收站）
 
 - 请求方式：`DELETE`
 - 路径：`/note/notes/{id}`
 - 是否鉴权：`是`
+- 返回说明：将笔记标记为已删除，移入回收站
 
 ### 4.3 修改笔记
 
@@ -297,7 +350,10 @@ Authorization: Bearer <token>
 ```json
 {
   "title": "更新后的标题",
-  "content": "更新后的内容"
+  "category": "分类",
+  "tags": "标签1,标签2",
+  "summary": "摘要",
+  "content": "<p>更新后的内容</p>"
 }
 ```
 
@@ -315,8 +371,259 @@ Authorization: Bearer <token>
 - 查询参数：
   - `current`：页码，默认 `1`
   - `size`：每页条数，默认 `10`
+  - `keyword`：关键词，搜索标题/摘要/内容
+  - `category`：分类筛选
+  - `tag`：标签筛选
 
-## 5. 错误响应说明
+### 4.6 查询回收站
+
+- 请求方式：`GET`
+- 路径：`/note/notes/trash`
+- 是否鉴权：`是`
+- 返回说明：返回当前用户已软删除的笔记列表
+
+### 4.7 恢复笔记
+
+- 请求方式：`PUT`
+- 路径：`/note/notes/{id}/restore`
+- 是否鉴权：`是`
+- 返回说明：将回收站中的笔记恢复
+
+### 4.8 彻底删除笔记
+
+- 请求方式：`DELETE`
+- 路径：`/note/notes/{id}/permanent`
+- 是否鉴权：`是`
+- 返回说明：从数据库彻底删除，不可恢复
+
+### 9. 清空回收站
+
+- 请求方式：`DELETE`
+- 路径：`/note/notes/trash/empty`
+
+### 10. 置顶/取消置顶笔记
+
+- 请求方式：`PUT`
+- 路径：`/note/notes/{id}/pin`
+
+### 11. 收藏/取消收藏笔记
+
+- 请求方式：`PUT`
+- 路径：`/note/notes/{id}/star`
+
+### 12. 查询收藏笔记列表
+
+- 请求方式：`GET`
+- 路径：`/note/notes/starred`
+
+## 3.1 note 模块 - 笔记模板
+
+### 1. 查询模板列表
+
+- 请求方式：`GET`
+- 路径：`/note/templates`
+
+返回说明：返回系统预置模板和当前用户自定义模板
+
+### 2. 查询单个模板
+
+- 请求方式：`GET`
+- 路径：`/note/templates/{id}`
+
+### 3. 创建模板
+
+- 请求方式：`POST`
+- 路径：`/note/templates`
+
+请求参数：
+
+```json
+{
+  "name": "我的模板",
+  "contentType": "markdown",
+  "content": "# 模板内容"
+}
+```
+
+### 4. 修改模板
+
+- 请求方式：`PUT`
+- 路径：`/note/templates/{id}`
+
+说明：系统预置模板不可修改/删除
+
+### 5. 删除模板
+
+- 请求方式：`DELETE`
+- 路径：`/note/templates/{id}`
+
+## 3.2 note 模块 - 全局搜索
+
+### 1. 全局搜索
+
+- 请求方式：`GET`
+- 路径：`/note/search`
+
+查询参数：
+
+- `keyword`：搜索关键词
+
+返回说明：按笔记、保险箱、待办三个分类返回匹配结果，每类最多 6 条
+
+## 5. 密码保险箱 vault 模块
+
+### 5.1 查询保险箱列表
+
+- 请求方式：`GET`
+- 路径：`/note/vault-items`
+- 是否鉴权：`是`
+- 查询参数：
+  - `keyword`：关键词，搜索标题/账号/网址/备注
+  - `category`：分类筛选
+
+### 5.2 查询单条保险箱记录
+
+- 请求方式：`GET`
+- 路径：`/note/vault-items/{id}`
+- 是否鉴权：`是`
+
+### 5.3 新增保险箱记录
+
+- 请求方式：`POST`
+- 路径：`/note/vault-items`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "title": "GitHub",
+  "category": "开发平台",
+  "username": "user@example.com",
+  "password": "StrongPass123",
+  "website": "https://github.com",
+  "remark": "主工作账号"
+}
+```
+
+### 5.4 修改保险箱记录
+
+- 请求方式：`PUT`
+- 路径：`/note/vault-items/{id}`
+- 是否鉴权：`是`
+
+### 5.5 删除保险箱记录
+
+- 请求方式：`DELETE`
+- 路径：`/note/vault-items/{id}`
+- 是否鉴权：`是`
+
+## 6. 待办事项 todo 模块
+
+### 6.1 查询待办列表
+
+- 请求方式：`GET`
+- 路径：`/note/todos`
+- 是否鉴权：`是`
+- 查询参数：
+  - `status`：状态筛选，`todo / doing / done`
+  - `priority`：优先级筛选，`low / medium / high`
+  - `keyword`：关键词，搜索标题和描述
+  - `reminderFilter`：提醒状态筛选，`active`（未过期）/ `expired`（已过期）
+
+### 6.2 查询单条待办
+
+- 请求方式：`GET`
+- 路径：`/note/todos/{id}`
+- 是否鉴权：`是`
+
+### 6.3 新增待办
+
+- 请求方式：`POST`
+- 路径：`/note/todos`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "title": "整理接口文档",
+  "description": "输出联调版本接口说明",
+  "status": "todo",
+  "priority": "high",
+  "dueDate": "2026-04-20",
+  "reminderEnabled": true,
+  "reminderAt": "2026-04-20T09:00:00",
+  "reminderEmail": "notify@example.com"
+}
+```
+
+### 6.4 修改待办
+
+- 请求方式：`PUT`
+- 路径：`/note/todos/{id}`
+- 是否鉴权：`是`
+- 请求参数与新增待办一致
+
+### 6.5 仅修改待办状态
+
+- 请求方式：`PUT`
+- 路径：`/note/todos/{id}/status`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "status": "done"
+}
+```
+
+### 6.6 删除待办
+
+- 请求方式：`DELETE`
+- 路径：`/note/todos/{id}`
+- 是否鉴权：`是`
+
+## 7. 活动日志 activity-log 模块
+
+### 7.1 查询活动日志
+
+- 请求方式：`GET`
+- 路径：`/note/activity-logs`
+- 是否鉴权：`是`
+- 查询参数：
+  - `module`：模块筛选，`note / vault / todo`，可选
+  - `limit`：返回条数，默认 `30`
+
+### 7.2 查询最近活动
+
+- 请求方式：`GET`
+- 路径：`/note/activity-logs/recent`
+- 是否鉴权：`是`
+- 查询参数：
+  - `limit`：返回条数，默认 `10`
+
+### 7.3 模块操作统计
+
+- 请求方式：`GET`
+- 路径：`/note/activity-logs/stats/modules`
+- 是否鉴权：`是`
+- 返回说明：返回各模块操作次数，格式 `{ "note": 12, "vault": 5, "todo": 8 }`
+
+### 7.4 按天操作统计
+
+- 请求方式：`GET`
+- 路径：`/note/activity-logs/stats/daily`
+- 是否鉴权：`是`
+- 查询参数：
+  - `days`：统计天数，默认 `14`
+- 返回说明：返回按日期的操作次数，格式 `{ "2026-05-01": 5, "2026-04-30": 3 }`
+
+## 8. 提醒发送说明
+
+- 待办提醒由 `note` 服务定时任务每分钟扫描一次。
+- 只有 `reminderEnabled = true`、`reminderSent = false` 且 `reminderAt <= 当前时间` 的待办会触发发送。
+- 提醒邮件发送成功后，后端会把 `reminderSent` 更新为 `true`，避免重复发送。
+
+## 9. 错误响应说明
 
 常见错误码：
 

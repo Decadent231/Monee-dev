@@ -22,4 +22,6 @@ public class NoteUpdateRequest {
     @NotBlank(message = "内容不能为空")
     @Size(max = 30000, message = "内容长度不能超过30000")
     private String content;
+
+    private String contentType;
 }

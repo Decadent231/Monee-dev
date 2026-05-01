@@ -8,6 +8,7 @@ import com.money.cloud.user.dto.SendCodeRequest;
 import com.money.cloud.user.dto.ChangePasswordRequest;
 import com.money.cloud.user.dto.UserInfoResponse;
 import com.money.cloud.user.dto.UserProfileUpdateRequest;
+import com.money.cloud.user.dto.VerifyPasswordRequest;
 import com.money.cloud.user.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,5 +57,10 @@ public class AuthController {
     public ApiResponse<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);
         return ApiResponse.success("密码修改成功", null);
+    }
+
+    @PostMapping("/users/verify-password")
+    public ApiResponse<Boolean> verifyPassword(@Valid @RequestBody VerifyPasswordRequest request) {
+        return ApiResponse.success(authService.verifyPassword(request.getPassword()));
     }
 }

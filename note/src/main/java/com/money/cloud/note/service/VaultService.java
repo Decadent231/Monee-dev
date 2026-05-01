@@ -22,6 +22,7 @@ public class VaultService {
 
     private final VaultItemMapper vaultItemMapper;
     private final VaultCryptoUtil vaultCryptoUtil;
+    private final ActivityLogService activityLogService;
 
     @Transactional
     public VaultItemResponse create(VaultItemRequest request) {
@@ -31,6 +32,7 @@ public class VaultService {
         item.setCreatedAt(LocalDateTime.now());
         item.setUpdatedAt(LocalDateTime.now());
         vaultItemMapper.insert(item);
+        activityLogService.log("vault", "create", item.getId(), item.getTitle());
         return toResponse(item);
     }
 
@@ -40,12 +42,15 @@ public class VaultService {
         applyRequest(item, request);
         item.setUpdatedAt(LocalDateTime.now());
         vaultItemMapper.updateById(item);
+        activityLogService.log("vault", "update", id, item.getTitle());
         return toResponse(item);
     }
 
     @Transactional
     public void delete(Long id) {
-        vaultItemMapper.deleteById(getOwnedItem(id).getId());
+        VaultItem item = getOwnedItem(id);
+        activityLogService.log("vault", "delete", id, item.getTitle());
+        vaultItemMapper.deleteById(item.getId());
     }
 
     public VaultItemResponse getById(Long id) {

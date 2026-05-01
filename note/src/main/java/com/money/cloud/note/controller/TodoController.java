@@ -28,8 +28,10 @@ public class TodoController {
 
     @GetMapping
     public ApiResponse<List<TodoItem>> list(@RequestParam(required = false) String status,
-                                            @RequestParam(required = false) String priority) {
-        return ApiResponse.success(todoService.list(status, priority));
+                                            @RequestParam(required = false) String priority,
+                                            @RequestParam(required = false) String keyword,
+                                            @RequestParam(required = false) String reminderFilter) {
+        return ApiResponse.success(todoService.list(status, priority, keyword, reminderFilter));
     }
 
     @GetMapping("/{id}")

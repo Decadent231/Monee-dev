@@ -129,6 +129,15 @@ public class AuthService {
         sysUserMapper.updateById(user);
     }
 
+    public boolean verifyPassword(String password) {
+        Long userId = UserContext.requireUserId();
+        SysUser user = sysUserMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        return passwordEncoder.matches(password, user.getPassword());
+    }
+
     private boolean existsUser(String email) {
         return sysUserMapper.selectCount(new LambdaQueryWrapper<SysUser>().eq(SysUser::getEmail, email)) > 0;
     }

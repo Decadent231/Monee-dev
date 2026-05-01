@@ -26,6 +26,7 @@ public class TodoService {
 
     private final TodoItemMapper todoItemMapper;
     private final MailUtil mailUtil;
+    private final ActivityLogService activityLogService;
 
     @Transactional
     public TodoItem create(TodoItemRequest request) {
@@ -38,6 +39,7 @@ public class TodoService {
         item.setUpdatedAt(LocalDateTime.now());
         item.setReminderSent(!Boolean.TRUE.equals(item.getReminderEnabled()));
         todoItemMapper.insert(item);
+        activityLogService.log("todo", "create", item.getId(), item.getTitle());
         return item;
     }
 
@@ -49,6 +51,7 @@ public class TodoService {
         item.setPriority(StringUtils.hasText(request.getPriority()) ? request.getPriority() : item.getPriority());
         item.setUpdatedAt(LocalDateTime.now());
         todoItemMapper.updateById(item);
+        activityLogService.log("todo", "update", id, item.getTitle());
         return item;
     }
 
@@ -58,15 +61,18 @@ public class TodoService {
         item.setStatus(status);
         item.setUpdatedAt(LocalDateTime.now());
         todoItemMapper.updateById(item);
+        activityLogService.log("todo", "update", id, item.getTitle() + " -> " + status);
         return item;
     }
 
     @Transactional
     public void delete(Long id) {
-        todoItemMapper.deleteById(getOwnedItem(id).getId());
+        TodoItem item = getOwnedItem(id);
+        activityLogService.log("todo", "delete", id, item.getTitle());
+        todoItemMapper.deleteById(item.getId());
     }
 
-    public List<TodoItem> list(String status, String priority) {
+    public List<TodoItem> list(String status, String priority, String keyword, String reminderFilter) {
         LambdaQueryWrapper<TodoItem> wrapper = new LambdaQueryWrapper<TodoItem>()
                 .eq(TodoItem::getUserId, UserContext.requireUserId())
                 .orderByAsc(TodoItem::getStatus)
@@ -77,6 +83,17 @@ public class TodoService {
         }
         if (StringUtils.hasText(priority)) {
             wrapper.eq(TodoItem::getPriority, priority);
+        }
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(q -> q.like(TodoItem::getTitle, keyword)
+                    .or().like(TodoItem::getDescription, keyword));
+        }
+        if ("active".equals(reminderFilter)) {
+            wrapper.eq(TodoItem::getReminderEnabled, true)
+                   .gt(TodoItem::getReminderAt, LocalDateTime.now());
+        } else if ("expired".equals(reminderFilter)) {
+            wrapper.eq(TodoItem::getReminderEnabled, true)
+                   .le(TodoItem::getReminderAt, LocalDateTime.now());
         }
         return todoItemMapper.selectList(wrapper);
     }

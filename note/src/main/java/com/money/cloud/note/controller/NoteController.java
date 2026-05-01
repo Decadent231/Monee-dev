@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,7 +36,7 @@ public class NoteController {
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
-        noteService.delete(id);
+        noteService.softDelete(id);
         return ApiResponse.success();
     }
 
@@ -62,5 +63,43 @@ public class NoteController {
         result.put("current", pageData.getCurrent());
         result.put("size", pageData.getSize());
         return ApiResponse.success(result);
+    }
+
+    @GetMapping("/trash")
+    public ApiResponse<List<Note>> listTrash() {
+        return ApiResponse.success(noteService.listTrash());
+    }
+
+    @GetMapping("/starred")
+    public ApiResponse<List<Note>> listStarred() {
+        return ApiResponse.success(noteService.listStarred());
+    }
+
+    @PutMapping("/{id}/pin")
+    public ApiResponse<Note> togglePin(@PathVariable Long id) {
+        return ApiResponse.success(noteService.togglePin(id));
+    }
+
+    @PutMapping("/{id}/star")
+    public ApiResponse<Note> toggleStar(@PathVariable Long id) {
+        return ApiResponse.success(noteService.toggleStar(id));
+    }
+
+    @PutMapping("/{id}/restore")
+    public ApiResponse<Void> restore(@PathVariable Long id) {
+        noteService.restore(id);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ApiResponse<Void> permanentlyDelete(@PathVariable Long id) {
+        noteService.permanentlyDelete(id);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/trash/empty")
+    public ApiResponse<Void> emptyTrash() {
+        noteService.emptyTrash();
+        return ApiResponse.success();
     }
 }
