@@ -786,3 +786,120 @@ Authorization: Bearer <token>
 - 路径：`/note/wiki/spaces/{spaceId}/tree`
 - 是否鉴权：`是`
 - 返回说明：返回树形结构，每个节点包含 `id`、`title`、`parentId`、`children` 数组
+
+## 12. 文件库模块
+
+### 12.1 上传文件
+
+- 请求方式：`POST`
+- 路径：`/note/files/upload`
+- 是否鉴权：`是`
+- 请求类型：`multipart/form-data`
+- 请求参数：
+  - `files`：文件（支持多文件）
+  - `folder`：虚拟文件夹，可选
+  - `remark`：备注，可选
+
+### 12.2 分页查询文件
+
+- 请求方式：`GET`
+- 路径：`/note/files`
+- 是否鉴权：`是`
+- 查询参数：
+  - `current`：页码，默认 `1`
+  - `size`：每页条数，默认 `15`
+  - `keyword`：关键词，搜索文件名/备注
+  - `folder`：文件夹筛选
+
+### 12.3 查询单条文件
+
+- 请求方式：`GET`
+- 路径：`/note/files/{id}`
+- 是否鉴权：`是`
+
+### 12.4 下载文件
+
+- 请求方式：`GET`
+- 路径：`/note/files/{id}/download`
+- 是否鉴权：`是`（支持 `?token=` 参数鉴权）
+- 返回说明：返回文件流，Content-Disposition 为附件
+
+### 12.5 预览文件
+
+- 请求方式：`GET`
+- 路径：`/note/files/{id}/preview`
+- 是否鉴权：`是`（支持 `?token=` 参数鉴权）
+- 返回说明：支持 `image/*`、`application/pdf`、`text/*` 预览
+
+### 12.6 修改文件信息
+
+- 请求方式：`PUT`
+- 路径：`/note/files/{id}`
+- 是否鉴权：`是`
+- 查询参数：
+  - `folder`：新文件夹
+  - `remark`：新备注
+
+### 12.7 删除文件
+
+- 请求方式：`DELETE`
+- 路径：`/note/files/{id}`
+- 是否鉴权：`是`
+- 返回说明：同时删除磁盘文件和数据库记录
+
+### 12.8 查询文件夹列表
+
+- 请求方式：`GET`
+- 路径：`/note/files/folders`
+- 是否鉴权：`是`
+- 返回说明：返回当前用户所有不重复的文件夹名称
+
+### 12.9 存储统计
+
+- 请求方式：`GET`
+- 路径：`/note/files/stats`
+- 是否鉴权：`是`
+- 返回说明：返回 `{ "fileCount": 10, "totalSize": 1048576 }`
+
+## 13. 工作台 Dashboard 模块
+
+### 13.1 全模块数据总览
+
+- 请求方式：`GET`
+- 路径：`/note/dashboard/overview`
+- 是否鉴权：`是`
+- 返回说明：返回笔记数、wiki页面数、待办数、待办完成数、保险箱数、日程数、文件数、文件总大小
+
+### 13.2 本周效率报告
+
+- 请求方式：`GET`
+- 路径：`/note/dashboard/weekly-report`
+- 是否鉴权：`是`
+- 返回说明：返回本周与上周的笔记新增数、待办完成数、操作次数对比
+
+### 13.3 知识增长曲线
+
+- 请求方式：`GET`
+- 路径：`/note/dashboard/knowledge-growth`
+- 是否鉴权：`是`
+- 查询参数：
+  - `days`：统计天数，默认 `30`
+- 返回说明：返回按日期的笔记+wiki新增数
+
+### 13.4 活动热力图
+
+- 请求方式：`GET`
+- 路径：`/note/dashboard/activity-heatmap`
+- 是否鉴权：`是`
+- 查询参数：
+  - `days`：统计天数，默认 `90`
+- 返回说明：返回按日期的操作次数，适配 ECharts Calendar Heatmap
+
+### 13.5 优先待办列表
+
+- 请求方式：`GET`
+- 路径：`/note/dashboard/top-todos`
+- 是否鉴权：`是`
+- 查询参数：
+  - `limit`：返回条数，默认 `5`
+- 返回说明：返回未完成待办按优先级+创建时间排序
