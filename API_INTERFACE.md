@@ -903,3 +903,43 @@ Authorization: Bearer <token>
 - 查询参数：
   - `limit`：返回条数，默认 `5`
 - 返回说明：返回未完成待办按优先级+创建时间排序
+
+---
+
+## 14. 笔记-文件关联模块
+
+| 接口 | 方法 | 路径 | 说明 |
+|------|------|------|------|
+| 关联文件到笔记 | POST | `/note/notes/{noteId}/files` | Body: 文件ID数组 `[1,2,3]` |
+| 取消关联 | DELETE | `/note/notes/{noteId}/files/{fileId}` | — |
+| 查询笔记关联的文件 | GET | `/note/notes/{noteId}/files` | 返回 `FileAsset[]` |
+| 查询文件关联的笔记 | GET | `/note/files/{fileId}/notes` | 返回 `Note[]` |
+
+### 14.1 关联文件到笔记
+
+- 方法：`POST`
+- 路径：`/note/notes/{noteId}/files`
+- 是否鉴权：`是`
+- Body：`[1, 2, 3]`（文件ID数组）
+- 返回说明：成功返回空data
+
+### 14.2 取消文件关联
+
+- 方法：`DELETE`
+- 路径：`/note/notes/{noteId}/files/{fileId}`
+- 是否鉴权：`是`
+- 返回说明：成功返回空data
+
+### 14.3 查询笔记关联的文件列表
+
+- 方法：`GET`
+- 路径：`/note/notes/{noteId}/files`
+- 是否鉴权：`是`
+- 返回说明：返回 `FileAsset[]`
+
+### 14.4 查询文件关联的笔记列表
+
+- 方法：`GET`
+- 路径：`/note/files/{fileId}/notes`
+- 是否鉴权：`是`
+- 返回说明：返回 `Note[]`
