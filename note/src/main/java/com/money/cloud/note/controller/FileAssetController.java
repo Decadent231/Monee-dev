@@ -3,7 +3,9 @@ package com.money.cloud.note.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.money.cloud.common.api.ApiResponse;
 import com.money.cloud.note.entity.FileAsset;
+import com.money.cloud.note.entity.Note;
 import com.money.cloud.note.service.FileAssetService;
+import com.money.cloud.note.service.NoteService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StreamUtils;
@@ -24,6 +26,7 @@ import java.util.Map;
 public class FileAssetController {
 
     private final FileAssetService fileAssetService;
+    private final NoteService noteService;
 
     @PostMapping("/upload")
     public ApiResponse<FileAsset> upload(@RequestParam("file") MultipartFile file,
@@ -113,6 +116,11 @@ public class FileAssetController {
     @GetMapping("/stats")
     public ApiResponse<Map<String, Object>> stats() {
         return ApiResponse.success(fileAssetService.getStorageStats());
+    }
+
+    @GetMapping("/{id}/notes")
+    public ApiResponse<List<Note>> listLinkedNotes(@PathVariable Long id) {
+        return ApiResponse.success(noteService.listByFileId(id));
     }
 
     private boolean isPreviewable(String mime) {

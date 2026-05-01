@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.money.cloud.common.api.ApiResponse;
 import com.money.cloud.note.dto.NoteCreateRequest;
 import com.money.cloud.note.dto.NoteUpdateRequest;
+import com.money.cloud.note.entity.FileAsset;
 import com.money.cloud.note.entity.Note;
 import com.money.cloud.note.service.NoteService;
 import jakarta.validation.Valid;
@@ -102,5 +103,22 @@ public class NoteController {
     public ApiResponse<Void> emptyTrash() {
         noteService.emptyTrash();
         return ApiResponse.success();
+    }
+
+    @PostMapping("/{id}/files")
+    public ApiResponse<Void> linkFiles(@PathVariable Long id, @RequestBody List<Long> fileIds) {
+        noteService.linkFiles(id, fileIds);
+        return ApiResponse.success();
+    }
+
+    @DeleteMapping("/{id}/files/{fileId}")
+    public ApiResponse<Void> unlinkFile(@PathVariable Long id, @PathVariable Long fileId) {
+        noteService.unlinkFile(id, fileId);
+        return ApiResponse.success();
+    }
+
+    @GetMapping("/{id}/files")
+    public ApiResponse<List<FileAsset>> listLinkedFiles(@PathVariable Long id) {
+        return ApiResponse.success(noteService.listLinkedFiles(id));
     }
 }

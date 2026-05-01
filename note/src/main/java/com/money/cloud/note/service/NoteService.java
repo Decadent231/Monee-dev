@@ -7,8 +7,12 @@ import com.money.cloud.common.context.UserContext;
 import com.money.cloud.common.exception.BusinessException;
 import com.money.cloud.note.dto.NoteCreateRequest;
 import com.money.cloud.note.dto.NoteUpdateRequest;
+import com.money.cloud.note.entity.FileAsset;
 import com.money.cloud.note.entity.Note;
+import com.money.cloud.note.entity.NoteFile;
 import com.money.cloud.note.entity.NoteTemplate;
+import com.money.cloud.note.mapper.FileAssetMapper;
+import com.money.cloud.note.mapper.NoteFileMapper;
 import com.money.cloud.note.mapper.NoteMapper;
 import com.money.cloud.note.mapper.NoteTemplateMapper;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +33,8 @@ public class NoteService {
 
     private final NoteMapper noteMapper;
     private final NoteTemplateMapper noteTemplateMapper;
+    private final NoteFileMapper noteFileMapper;
+    private final FileAssetMapper fileAssetMapper;
     private final ActivityLogService activityLogService;
 
     @Transactional
@@ -151,6 +161,70 @@ public class NoteService {
                 .eq(Note::getUserId, UserContext.requireUserId())
                 .eq(Note::getDeleted, 1)
                 .orderByDesc(Note::getDeletedAt));
+    }
+
+    @Transactional
+    public void linkFiles(Long noteId, List<Long> fileIds) {
+        getOwnedNote(noteId);
+        Long userId = UserContext.requireUserId();
+        for (Long fileId : fileIds) {
+            FileAsset file = fileAssetMapper.selectById(fileId);
+            if (file == null || !file.getUserId().equals(userId)) {
+                throw new BusinessException(404, "文件不存在: " + fileId);
+            }
+            boolean exists = noteFileMapper.selectCount(new LambdaQueryWrapper<NoteFile>()
+                    .eq(NoteFile::getNoteId, noteId)
+                    .eq(NoteFile::getFileId, fileId)) > 0;
+            if (!exists) {
+                NoteFile nf = new NoteFile();
+                nf.setNoteId(noteId);
+                nf.setFileId(fileId);
+                nf.setCreatedAt(LocalDateTime.now());
+                noteFileMapper.insert(nf);
+            }
+        }
+    }
+
+    @Transactional
+    public void unlinkFile(Long noteId, Long fileId) {
+        getOwnedNote(noteId);
+        noteFileMapper.delete(new LambdaQueryWrapper<NoteFile>()
+                .eq(NoteFile::getNoteId, noteId)
+                .eq(NoteFile::getFileId, fileId));
+    }
+
+    public List<FileAsset> listLinkedFiles(Long noteId) {
+        getOwnedNote(noteId);
+        List<NoteFile> links = noteFileMapper.selectList(new LambdaQueryWrapper<NoteFile>()
+                .eq(NoteFile::getNoteId, noteId));
+        if (links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> fileIds = links.stream().map(NoteFile::getFileId).collect(Collectors.toList());
+        return fileAssetMapper.selectBatchIds(fileIds);
+    }
+
+    public Map<Long, Long> countLinkedFilesForNotes(List<Long> noteIds) {
+        if (noteIds == null || noteIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<NoteFile> links = noteFileMapper.selectList(new LambdaQueryWrapper<NoteFile>()
+                .in(NoteFile::getNoteId, noteIds));
+        Map<Long, Long> result = new HashMap<>();
+        for (NoteFile nf : links) {
+            result.merge(nf.getNoteId(), 1L, Long::sum);
+        }
+        return result;
+    }
+
+    public List<Note> listByFileId(Long fileId) {
+        List<NoteFile> links = noteFileMapper.selectList(new LambdaQueryWrapper<NoteFile>()
+                .eq(NoteFile::getFileId, fileId));
+        if (links.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> noteIds = links.stream().map(NoteFile::getNoteId).collect(Collectors.toList());
+        return noteMapper.selectBatchIds(noteIds);
     }
 
     private void applyRequest(Note note, NoteCreateRequest request) {
