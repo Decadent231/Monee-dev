@@ -46,6 +46,7 @@ public class CalendarService {
         existing.setColor(event.getColor());
         existing.setLocation(event.getLocation());
         existing.setReminderMinutes(event.getReminderMinutes());
+        existing.setTodoItemId(event.getTodoItemId());
         existing.setUpdatedAt(LocalDateTime.now());
         calendarEventMapper.updateById(existing);
         activityLogService.log("calendar", "update", id, existing.getTitle());
