@@ -632,3 +632,157 @@ Authorization: Bearer <token>
 - `401`：未登录、Token 失效或无权限
 - `404`：资源不存在
 - `500`：系统内部异常
+
+## 10. 日历日程模块
+
+### 10.1 新建日程
+
+- 请求方式：`POST`
+- 路径：`/note/calendar`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "title": "团队周会",
+  "description": "本周迭代回顾",
+  "startTime": "2026-05-05T10:00:00",
+  "endTime": "2026-05-05T11:00:00",
+  "allDay": 0,
+  "color": "#409eff",
+  "location": "会议室A",
+  "reminderMinutes": 15
+}
+```
+
+### 10.2 修改日程
+
+- 请求方式：`PUT`
+- 路径：`/note/calendar/{id}`
+- 是否鉴权：`是`
+
+### 10.3 删除日程
+
+- 请求方式：`DELETE`
+- 路径：`/note/calendar/{id}`
+- 是否鉴权：`是`
+
+### 10.4 查询单个日程
+
+- 请求方式：`GET`
+- 路径：`/note/calendar/{id}`
+- 是否鉴权：`是`
+
+### 10.5 按月查询日程
+
+- 请求方式：`GET`
+- 路径：`/note/calendar`
+- 是否鉴权：`是`
+- 查询参数：
+  - `year`：年份，必填
+  - `month`：月份，必填
+
+### 10.6 按日期范围查询
+
+- 请求方式：`GET`
+- 路径：`/note/calendar/range`
+- 是否鉴权：`是`
+- 查询参数：
+  - `startDate`：开始日期，格式 `yyyy-MM-dd`
+  - `endDate`：结束日期，格式 `yyyy-MM-dd`
+
+### 10.7 查询今日日程
+
+- 请求方式：`GET`
+- 路径：`/note/calendar/today`
+- 是否鉴权：`是`
+
+## 11. 知识库 Wiki 模块
+
+### 11.1 新建知识库
+
+- 请求方式：`POST`
+- 路径：`/note/wiki/spaces`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "name": "技术笔记",
+  "description": "日常开发知识积累",
+  "icon": "💻"
+}
+```
+
+### 11.2 修改知识库
+
+- 请求方式：`PUT`
+- 路径：`/note/wiki/spaces/{id}`
+- 是否鉴权：`是`
+
+### 11.3 删除知识库
+
+- 请求方式：`DELETE`
+- 路径：`/note/wiki/spaces/{id}`
+- 是否鉴权：`是`
+- 说明：删除知识库会同时删除其中所有页面
+
+### 11.4 查询知识库列表
+
+- 请求方式：`GET`
+- 路径：`/note/wiki/spaces`
+- 是否鉴权：`是`
+
+### 11.5 查询单个知识库
+
+- 请求方式：`GET`
+- 路径：`/note/wiki/spaces/{id}`
+- 是否鉴权：`是`
+
+### 11.6 新建页面
+
+- 请求方式：`POST`
+- 路径：`/note/wiki/pages`
+- 是否鉴权：`是`
+- 请求参数：
+
+```json
+{
+  "spaceId": 1,
+  "parentId": null,
+  "title": "Java 并发编程",
+  "content": "# 并发编程\n\n## 线程池..."
+}
+```
+
+### 11.7 修改页面
+
+- 请求方式：`PUT`
+- 路径：`/note/wiki/pages/{id}`
+- 是否鉴权：`是`
+
+### 11.8 删除页面
+
+- 请求方式：`DELETE`
+- 路径：`/note/wiki/pages/{id}`
+- 是否鉴权：`是`
+- 说明：删除页面会同时删除所有子页面
+
+### 11.9 查询单个页面
+
+- 请求方式：`GET`
+- 路径：`/note/wiki/pages/{id}`
+- 是否鉴权：`是`
+
+### 11.10 查询知识库下所有页面（平铺）
+
+- 请求方式：`GET`
+- 路径：`/note/wiki/spaces/{spaceId}/pages`
+- 是否鉴权：`是`
+
+### 11.11 查询知识库页面树
+
+- 请求方式：`GET`
+- 路径：`/note/wiki/spaces/{spaceId}/tree`
+- 是否鉴权：`是`
+- 返回说明：返回树形结构，每个节点包含 `id`、`title`、`parentId`、`children` 数组

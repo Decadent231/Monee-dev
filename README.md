@@ -84,6 +84,8 @@ money-cloud
 - 待办事项 CRUD，支持状态切换、优先级、截止日期
 - 待办邮件提醒：支持提醒时间、提醒邮箱，默认发到当前账号邮箱
 - 用户操作活动日志：记录笔记/保险箱/待办的创建、更新、删除操作
+- 日历日程管理：事件 CRUD、月视图/周视图查询、日期范围查询、全天事件、颜色标签
+- 知识库 Wiki：多知识库空间、树形页面结构、无限层级子页面、页面内容编辑
 
 ## 环境要求
 
@@ -111,6 +113,7 @@ money-cloud
 - [sql/todo-reminder-upgrade.sql](./sql/todo-reminder-upgrade.sql)
 - [sql/note_upgrade_20260501.sql](./sql/note_upgrade_20260501.sql)（笔记软删除 + 活动日志表）
 - [sql/note_upgrade_20260501_v2.sql](./sql/note_upgrade_20260501_v2.sql)（笔记内容类型、置顶、收藏、笔记模板表）
+- [sql/note_upgrade_20260501_v3.sql](./sql/note_upgrade_20260501_v3.sql)（日历日程表、知识库空间表、知识库页面表）
 
 ## 配置说明
 
